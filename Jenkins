@@ -1,6 +1,6 @@
 def artifactGroup = 'ecom-microfrontends'
-def artifactName = 'utility-page'
-def affectedCi = 'utility-pages'
+def artifactName = 'sitespeed'
+def affectedCi = 'sitespeed'
 
 pipeline {
   agent {
