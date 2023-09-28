@@ -1,0 +1,51 @@
+def artifactGroup = 'ecom-microfrontends'
+def artifactName = 'utility-page'
+def affectedCi = 'utility-pages'
+
+pipeline {
+  agent {
+    docker {
+      label 'pipes-azure-east-agents'
+      registryCredentialsId 'artifactory-jfrog-credentials'
+      registryUrl 'https://gapinc-docker-repo.jfrog.io/'
+      image 'gapinc-docker-repo.jfrog.io/s-sell-brodps/webapps-toolchain-jenkins-azure-agent-node18:1.0.0'
+      args '--group-add 985 -v /var/run/docker.sock:/var/run/docker.sock --shm-size=1g --network host'
+    }
+  }
+
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+  }
+
+  environment {
+    GIT = credentials('github_credential')
+    ARTIFACTORY = credentials('artifactory-jfrog-credentials')
+    ARTIFACTORY_TOKEN = credentials('artifactory-npm-token')
+    ARTIFACTORY_BASE_URL="https://gapinc.jfrog.io/gapinc"
+    SONAR_TOKEN = credentials('contentservicenew-sonar-token')
+    LHCI_BUILD_TOKEN = credentials('utility-page-lhci-build-token')
+    SERVICE_DISCOVERY_DATA = credentials('service-discovery-data-azeus')
+    LHCI = credentials('lhci-dashboard-basic-auth')
+  }
+
+  stages {
+    stage('Install') {
+      steps {
+        sh(script: './scripts/generate_npmrc.sh', encoding: 'UTF-8')
+      }
+    }
+    stage('Test') {
+      steps {
+        script {
+          sh 'docker run -v ${WORKSPACE}:/sitespeed.io sitespeedio/sitespeed.io --outputFolder output https://www.sitespeed.io/ -n 1'
+        }
+      }
+    }
+  }
+  post {
+    always {
+      sh 'rm -rf node_modules dist build'
+      sh 'git clean -dfx' // cleanup
+    }
+  }
+}
