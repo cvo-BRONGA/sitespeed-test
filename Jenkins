@@ -1,7 +1,3 @@
-def artifactGroup = 'ecom-microfrontends'
-def artifactName = 'sitespeed'
-def affectedCi = 'sitespeed'
-
 pipeline {
   agent {
     docker {
